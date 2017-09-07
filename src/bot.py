@@ -25,10 +25,11 @@ class Bot(BasePokerPlayer):
     def declare_action(self, valid_actions, hole_card, round_state):
         rnd = random.randint(1,101)
 
-        hc1 = Card.from_str(hole_card[0])
-        hc2 = Card.from_str(hole_card[1])
+        c1 = Card.from_str(hole_card[0])
+        c2 = Card.from_str(hole_card[1])
 
-        if hc1.rank >= 10 and hc2.rank >= 10:
+        if c1.rank + c2.rank >= 23 or c1.rank == c2.rank:
+            print c1, c2
             return self.raiseOrCall(valid_actions, MAX)
         else:
             return 'fold', 0
