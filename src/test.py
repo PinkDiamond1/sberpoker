@@ -7,7 +7,7 @@ from manic import *
 from randomer import *
 
 STACK = 1500
-GAMES = 30
+GAMES = 50
 
 players = [
     ['Bot      ', Bot(), 0],

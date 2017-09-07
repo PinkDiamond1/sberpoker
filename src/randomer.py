@@ -4,8 +4,6 @@ import random
 
 from pypokerengine.players import BasePokerPlayer
 
-MULT = 1
-
 class Randomer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
     def declare_action(self, valid_actions, hole_card, round_state):
@@ -16,7 +14,8 @@ class Randomer(BasePokerPlayer):  # Do not forget to make parent class as "BaseP
             return 'call', valid_actions[1]['amount']
         else:
             action = valid_actions[2]
-            amount = min(action['amount']['min'] * MULT, action['amount']['max'])
+            mul = random.randint(1,10)
+            amount = min(action['amount']['min'] * mul, action['amount']['max'])
             return 'raise', amount
 
     def receive_game_start_message(self, game_info):
