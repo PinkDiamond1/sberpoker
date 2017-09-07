@@ -10,16 +10,14 @@ class Randomer(BasePokerPlayer):  # Do not forget to make parent class as "BaseP
 
     def declare_action(self, valid_actions, hole_card, round_state):
         rnd = random.randint(1,101)
-        if rnd < 34:
-            action = valid_actions[0]
-            return action['action'], action['amount']
-        elif rnd < 67:
-            action = valid_actions[1]
-            return action['action'], action['amount']
+        if rnd < 50:
+            return 'fold', 0
+        elif rnd < 80 or valid_actions[2]['amount']['max'] <= 0:
+            return 'call', valid_actions[1]['amount']
         else:
             action = valid_actions[2]
             amount = min(action['amount']['min'] * MULT, action['amount']['max'])
-            return action['action'], amount
+            return 'raise', amount
 
     def receive_game_start_message(self, game_info):
         pass

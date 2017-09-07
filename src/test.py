@@ -9,7 +9,7 @@ from randomer import *
 config = setup_config(max_round=50, initial_stack=1500, small_blind_amount=15)
 # config.register_player(name="Hero", algorithm=Console())
 # config.register_player(name="Bot", algorithm=Bot())
-config.register_player(name="Fish", algorithm=Fish())
+# config.register_player(name="Fish", algorithm=Fish())
 # config.register_player(name="Honest", algorithm=Honest())
 config.register_player(name="Manic", algorithm=Manic())
 config.register_player(name="Randomer", algorithm=Randomer())
