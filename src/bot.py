@@ -1,14 +1,37 @@
 import sys
 import json
+import random
 
 from pypokerengine.players import BasePokerPlayer
+from pypokerengine.engine.card import Card
 
-class Bot(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
+MULT = 1
+
+MIN = 0
+MAX = 999999999
+
+class Bot(BasePokerPlayer):
+
+    def raiseOrCall(self, valid_actions, val):
+        if valid_actions[2]['amount']['max'] < 0:
+            return 'call', valid_actions[1]['amount']
+        elif valid_actions[2]['amount']['max'] < val:
+            return 'raise', valid_actions[2]['amount']['max']
+        elif val < valid_actions[2]['amount']['min']:
+            return 'raise', valid_actions[2]['amount']['min']
+        else:
+            return 'raise', val
 
     def declare_action(self, valid_actions, hole_card, round_state):
-        call_action_info = valid_actions[1]
-        action, amount = call_action_info["action"], call_action_info["amount"]
-        return action, amount
+        rnd = random.randint(1,101)
+
+        hc1 = Card.from_str(hole_card[0])
+        hc2 = Card.from_str(hole_card[1])
+
+        if hc1.rank >= 10 and hc2.rank >= 10:
+            return self.raiseOrCall(valid_actions, MAX)
+        else:
+            return 'fold', 0
 
     def receive_game_start_message(self, game_info):
         pass

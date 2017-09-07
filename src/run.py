@@ -1,8 +1,8 @@
-from randomer import *
+from bot import *
 
 if __name__ == '__main__':
 
-    player = Randomer()
+    player = Bot()
 
     while True:
         line = sys.stdin.readline().rstrip()

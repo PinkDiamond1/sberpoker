@@ -6,20 +6,32 @@ from honest import *
 from manic import *
 from randomer import *
 
-config = setup_config(max_round=50, initial_stack=1500, small_blind_amount=15)
-# config.register_player(name="Hero", algorithm=Console())
-# config.register_player(name="Bot", algorithm=Bot())
-# config.register_player(name="Fish", algorithm=Fish())
-# config.register_player(name="Honest", algorithm=Honest())
-config.register_player(name="Manic", algorithm=Manic())
-config.register_player(name="Randomer", algorithm=Randomer())
-# config.register_player(name="Randomer2", algorithm=Randomer())
-# config.register_player(name="Randomer3", algorithm=Randomer())
-# config.register_player(name="Randomer4", algorithm=Randomer())
-# config.register_player(name="Randomer5", algorithm=Randomer())
-# config.register_player(name="Randomer6", algorithm=Randomer())
-# config.register_player(name="Randomer7", algorithm=Randomer())
-# config.register_player(name="Randomer8", algorithm=Randomer())
-# config.register_player(name="Randomer9", algorithm=Randomer())
-game_result = start_poker(config, verbose=1)
-print json.dumps(game_result["players"], indent=2, sort_keys=True)
+STACK = 1500
+GAMES = 100
+
+players = [
+    ['Bot     ', Bot(), 0],
+    ['Randomer', Randomer(), 0]
+]
+
+for g in range(GAMES):
+    config = setup_config(max_round=50, initial_stack=STACK, small_blind_amount=15)
+
+    i = 0
+    while i < len(players):
+        config.register_player(name=players[i][0], algorithm=players[i][1])
+        i += 1
+
+    game_result = start_poker(config, verbose=0)
+    print json.dumps(game_result['players'], indent=2, sort_keys=True)
+
+    i = 0
+    while i < len(game_result['players']):
+        players[i][2] += game_result['players'][i]['stack'] - STACK
+        i += 1
+
+i = 0
+while i < len(players):
+    config.register_player(name=players[i][0], algorithm=players[i][1])
+    print players[i][0], players[i][2] / GAMES
+    i += 1
