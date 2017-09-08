@@ -20,7 +20,7 @@ class Bot(BasePokerPlayer):
         big = c1.rank + c2.rank >= 24
         monster = c1.rank + c2.rank >= 26
         pair = c1.rank == c2.rank
-        bigPair = c1.rank >= 10
+        bigPair = c1.rank >= 12
 
         if big or pair or rnd < 10:
             pot = self.countPot(round_state)
