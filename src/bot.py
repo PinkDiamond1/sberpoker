@@ -17,7 +17,7 @@ class Bot(BasePokerPlayer):
 
         c1 = Card.from_str(hole_card[0])
         c2 = Card.from_str(hole_card[1])
-        big = c1.rank + c2.rank >= 23
+        big = c1.rank + c2.rank >= 24
         monster = c1.rank + c2.rank >= 26
         pair = c1.rank == c2.rank
         bigPair = c1.rank >= 10
