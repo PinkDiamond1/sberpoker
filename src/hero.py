@@ -70,7 +70,8 @@ class Hero(BasePokerPlayer):
             elif blinds < 10: push = pair or medium
             else:             push = pair or big
         else:
-            if   blinds < 5:  push = pair or medium
+            if   blinds < 3:  push = True
+            elif blinds < 5:  push = pair or medium
             elif blinds < 10: push = big_pair or big
             else:             push = monster
 
