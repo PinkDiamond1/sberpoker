@@ -7,10 +7,18 @@ from manic import *
 from randomer import *
 
 STACK = 1500
-GAMES = 50
+GAMES = 100
 
 players = [
-    ['Hero     ', Hero(), 0],
+    ['Hero     ', Hero(5, 10), 0],
+    # ['Hero2    ', Hero(10, 10), 0],
+    # ['Hero3    ', Hero(20, 10), 0],
+    # ['Hero4    ', Hero(0, 10), 0],
+    # ['Hero5    ', Hero(5, 20), 0],
+    # ['Hero6    ', Hero(10, 20), 0],
+    # ['Hero7    ', Hero(20, 20), 0],
+    # ['Hero8    ', Hero(0, 20), 0],
+    # ['Hero9    ', Hero(0, 0), 0],
     ['Randomer1', Randomer(), 0],
     ['Randomer2', Randomer(), 0],
     ['Randomer3', Randomer(), 0],
@@ -18,7 +26,7 @@ players = [
     ['Randomer5', Randomer(), 0],
     ['Randomer6', Randomer(), 0],
     ['Randomer7', Randomer(), 0],
-    ['Randomer8', Randomer(), 0]
+    ['Randomer8', Randomer(), 0],
 ]
 
 for g in range(GAMES):
