@@ -12,10 +12,12 @@ if __name__ == '__main__':
         data = json.loads(data)
 
         if event_type == 'declare_action':
-            action, amount = player.declare_action(data['valid_actions'], data['hole_card'], data['round_state'])
+            action, amount = player.declare_action(
+                data['valid_actions'], data['hole_card'], data['round_state'], data.get('bot_state'))
             sys.stdout.write('{}\t{}\n'.format(action, amount))
             sys.stdout.flush()
         elif event_type == 'game_start':
+            player.set_uuid(data.get('uuid'))
             player.receive_game_start_message(data)
         elif event_type == 'round_start':
             player.receive_round_start_message(data['round_count'], data['hole_card'], data['seats'])

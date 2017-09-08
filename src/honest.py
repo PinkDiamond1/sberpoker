@@ -5,7 +5,7 @@ NB_SIMULATION = 100
 
 class Honest(BasePokerPlayer):
 
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         community_card = round_state['community_card']
         win_rate = estimate_hole_card_win_rate(
                 nb_simulation=NB_SIMULATION,

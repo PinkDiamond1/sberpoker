@@ -3,7 +3,7 @@ import pypokerengine.utils.visualize_utils as U
 
 class Console(BasePokerPlayer):
 
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         print(U.visualize_declare_action(valid_actions, hole_card, round_state, self.uuid))
         action, amount = self._receive_action_from_console(valid_actions)
         return action, amount

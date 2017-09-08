@@ -12,7 +12,7 @@ MAX = 999999999
 
 class Hero(BasePokerPlayer):
 
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         rnd = random.randint(1,101)
 
         c1 = Card.from_str(hole_card[0])

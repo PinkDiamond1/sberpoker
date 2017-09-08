@@ -7,7 +7,7 @@ from pypokerengine.players import BasePokerPlayer
 class Manic(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
     #  we define the logic to make an action through this method. (so this method would be the core of your AI)
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         # valid_actions format => [fold_action_info, call_action_info, raise_action_info]
         print valid_actions
         raise_action_info = valid_actions[2]

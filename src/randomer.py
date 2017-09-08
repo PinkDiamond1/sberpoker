@@ -6,7 +6,7 @@ from pypokerengine.players import BasePokerPlayer
 
 class Randomer(BasePokerPlayer):  # Do not forget to make parent class as "BasePokerPlayer"
 
-    def declare_action(self, valid_actions, hole_card, round_state):
+    def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         rnd = random.randint(1,101)
         if rnd < 50:
             return 'fold', 0
