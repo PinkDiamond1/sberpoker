@@ -1,6 +1,6 @@
 from pypokerengine.api.game import setup_config, start_poker
-from bot import *
 from console import *
+from hero import *
 from fish import *
 from honest import *
 from manic import *
@@ -10,7 +10,7 @@ STACK = 1500
 GAMES = 50
 
 players = [
-    ['Bot      ', Bot(), 0],
+    ['Hero     ', Hero(), 0],
     ['Randomer1', Randomer(), 0],
     ['Randomer2', Randomer(), 0],
     ['Randomer3', Randomer(), 0],

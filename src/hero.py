@@ -10,7 +10,7 @@ MULT = 1
 MIN = 0
 MAX = 999999999
 
-class Bot(BasePokerPlayer):
+class Hero(BasePokerPlayer):
 
     def declare_action(self, valid_actions, hole_card, round_state):
         rnd = random.randint(1,101)
@@ -20,16 +20,16 @@ class Bot(BasePokerPlayer):
         big = c1.rank + c2.rank >= 24
         monster = c1.rank + c2.rank >= 26
         pair = c1.rank == c2.rank
-        bigPair = c1.rank >= 12
+        bigPair = pair and c1.rank >= 12
 
-        if big or pair or rnd < 10:
+        if big or pair or rnd < 5:
             pot = self.countPot(round_state)
             smallPot = pot < 300
 
             if smallPot or monster or bigPair:
                 # print c1, c2
                 return self.raiseOrCall(valid_actions, MAX)
-        return 'fold', 0
+        return self.checkOrFold(valid_actions)
 
     def raiseOrCall(self, valid_actions, val):
         if valid_actions[2]['amount']['max'] < 0:
@@ -38,8 +38,13 @@ class Bot(BasePokerPlayer):
             return 'raise', valid_actions[2]['amount']['max']
         elif val < valid_actions[2]['amount']['min']:
             return 'raise', valid_actions[2]['amount']['min']
-        else:
-            return 'raise', val
+        return 'raise', val
+
+    def checkOrFold(self, valid_actions):
+        if valid_actions[1]['amount'] > 0:
+            return 'fold', 0
+        return 'call', 0
+
 
     def countPot(self, round_state):
         total = round_state['pot']['main']['amount']
