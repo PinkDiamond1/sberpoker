@@ -9,17 +9,18 @@ from manic import *
 from randomer import *
 
 STACK = 1500
-GAMES = 100
+GAMES = 1000
 
 players = [
+    ['Hero03   ', Hero03(), 0, 0],
     ['Hero02   ', Hero02(), 0, 0],
     ['Hero01   ', Hero01(), 0, 0],
-    ['Hero02   ', Hero02(), 0, 0],
-    ['Hero01   ', Hero01(), 0, 0],
-    ['Hero02   ', Hero02(), 0, 0],
-    ['Hero01   ', Hero01(), 0, 0],
-    ['Hero02   ', Hero02(), 0, 0],
-    ['Hero01   ', Hero01(), 0, 0],
+    # ['Hero02   ', Hero02(), 0, 0],
+    # ['Hero01   ', Hero01(), 0, 0],
+    # ['Hero02   ', Hero02(), 0, 0],
+    # ['Hero01   ', Hero01(), 0, 0],
+    # ['Hero02   ', Hero02(), 0, 0],
+    # ['Hero01   ', Hero01(), 0, 0],
 
     # ['Randomer1', Randomer(), 0, 0],
     # ['Randomer2', Randomer(), 0, 0],
