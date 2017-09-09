@@ -119,7 +119,7 @@ class Hero03(BasePokerPlayer):
             elif suited and hi == 12 and low >= 6:
                 push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
             # 97s, 96s, 86s, 76s, 75s, 65s
-        elif suited and ((low == 6 or low == 5) and (hi == 9 or hi == 8 or hi == 7) or low == 5 and (hi == 6 or hi == 7)):
+            elif suited and ((low == 6 or low == 5) and (hi == 9 or hi == 8 or hi == 7) or low == 5 and (hi == 6 or hi == 7)):
                 push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
         else:
             if   blinds < 3:  push = True
