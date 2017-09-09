@@ -24,6 +24,7 @@ class Hero03(BasePokerPlayer):
 
     bb = 0
     game_info = []
+    start_seats = []
 
     def __init__(self, random_percent=0, small_stack_bb=10):
         self.random_percent = random_percent
@@ -31,15 +32,15 @@ class Hero03(BasePokerPlayer):
 
     def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         rnd = random.randint(1,101)
+        c1 = Card.from_str(hole_card[0])
+        c2 = Card.from_str(hole_card[1])
+
+        own_stack, avg_stack = self.count_stacks(round_state)
+        blinds = min(own_stack, avg_stack) / self.bb
 
         if round_state['street'] == 'preflop':
-            c1 = Card.from_str(hole_card[0])
-            c2 = Card.from_str(hole_card[1])
             pair = c1.rank == c2.rank
             suited = c1.suit == c2.suit
-
-            own_stack, avg_stack = self.count_stacks(round_state)
-            blinds = min(own_stack, avg_stack) / self.bb
 
             if blinds < 14:
                 return self.push_fold(valid_actions, round_state, blinds, c1, c2)
@@ -79,40 +80,40 @@ class Hero03(BasePokerPlayer):
                 push = True
             # 88-66
             elif pair and low >= 6:
-                push = blinds >= 10 or position >= POS_MD
+                push = blinds <= 10 or position >= POS_MD
             # 55-22
             elif pair:
-                push = blinds >= 8 or blinds >= 10 and position >= POS_MD or position >= POS_CO
+                push = blinds <= 8 or blinds <= 10 and position >= POS_MD or position >= POS_CO
             # AK, AQ
             elif hi == 14 and low >= 12:
                 push = True
             # AJs, ATs
             elif suited and hi == 14 and low >= 10:
-                push = blinds >= 8 or position >= POS_MD
+                push = blinds <= 8 or position >= POS_MD
             # A9s-A2s
             elif suited and hi == 14:
-                push = blinds >= 5 or blinds >= 7 and position >= POS_MD or blinds >= 10 and position >= POS_CO or position >= POS_SB
+                push = blinds <= 5 or blinds <= 7 and position >= POS_MD or blinds <= 10 and position >= POS_CO or position >= POS_SB
             # AJo, ATo
             elif hi == 14 and low >= 10:
-                push = blinds >= 7 or blinds >= 8 and position >= POS_MD or blinds >= 11 and position >= POS_CO or position >= POS_BU
+                push = blinds <= 7 or blinds <= 8 and position >= POS_MD or blinds <= 11 and position >= POS_CO or position >= POS_BU
             # A9o-A2o
             elif hi == 14:
-                push = blinds >= 5 or blinds >= 7 and position >= POS_CO or blinds >= 9 and position >= POS_BU or position >= POS_SB
+                push = blinds <= 5 or blinds <= 7 and position >= POS_CO or blinds <= 9 and position >= POS_BU or position >= POS_SB
             # KQs-K9s, QJs-Q9s, JTs, J9s, T9s
             elif suited and low >= 9:
-                push = blinds >= 8 or blinds >= 10 and position >= POS_MD or position >= POS_CO
+                push = blinds <= 8 or blinds <= 10 and position >= POS_MD or position >= POS_CO
             # K8s-K4s, Q8s, J8s, T8s, 98s
             elif suited and (low >= 8 or hi == 13 and low >= 4):
-                push = blinds >= 5 or blinds >= 6 and position >= POS_MD or blinds >= 8 and position >= POS_CO or blinds >= 9 and position >= POS_BU or position >= POS_SB
+                push = blinds <= 5 or blinds <= 6 and position >= POS_MD or blinds <= 8 and position >= POS_CO or blinds <= 9 and position >= POS_BU or position >= POS_SB
             # KQo-KTo, QJo-QTo, JTo
             elif low >= 10:
-                push = blinds >= 5 or blinds >= 8 and position >= POS_MD or blinds >= 10 and position >= POS_CO or position >= POS_SB
+                push = blinds <= 5 or blinds <= 8 and position >= POS_MD or blinds <= 10 and position >= POS_CO or position >= POS_SB
             # Q7s, Q6s
             elif suited and hi == 12 and low >= 6:
-                push = blinds >= 4 or blinds >= 5 and position >= POS_MD or blinds >= 6 and position >= POS_CO or blinds >= 7 and position >= POS_BU or position >= POS_SB
+                push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
             # 97s, 96s, 86s, 76s, 75s, 65s
         elif suited and ((low == 6 or low == 5) and (hi == 9 or hi == 8 or hi == 7) or low == 5 and (hi == 6 or hi == 7)):
-                push = blinds >= 4 or blinds >= 5 and position >= POS_MD or blinds >= 6 and position >= POS_CO or blinds >= 7 and position >= POS_BU or position >= POS_SB
+                push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
         else:
             if   blinds < 3:  push = True
             elif blinds < 5:  push = pair or medium
@@ -120,6 +121,7 @@ class Hero03(BasePokerPlayer):
             else:             push = monster
 
         if push:
+            # print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, first_in, position, c1, c2
             # print 'PUSH', blinds, c1, c2
             return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
@@ -151,8 +153,8 @@ class Hero03(BasePokerPlayer):
     def get_position_end(self, round_state):
         count = 0
         i = 0
-        while i < len(round_state['seats']):
-            s = round_state['seats'][i]
+        while i < len(self.start_seats):
+            s = self.start_seats[i]
             if s['stack'] > 0:
                 count += 1
             i += 1
@@ -163,11 +165,11 @@ class Hero03(BasePokerPlayer):
         position = 0
         found = False
         i = round_state['small_blind_pos']
-        while i < len(round_state['seats']):
+        while i < len(self.start_seats):
             if i == seat:
                 found = True
                 break
-            s = round_state['seats'][i]
+            s = self.start_seats[i]
             if s['stack'] > 0:
                 position += 1
             i += 1
@@ -177,7 +179,7 @@ class Hero03(BasePokerPlayer):
                 if i == seat:
                     found = True
                     break
-                s = round_state['seats'][i]
+                s = self.start_seats[i]
                 if s['stack'] > 0:
                     position += 1
                 i += 1
@@ -187,8 +189,8 @@ class Hero03(BasePokerPlayer):
 
     def get_seat(self, round_state):
         i = 0
-        while i < len(round_state['seats']):
-            seat = round_state['seats'][i]
+        while i < len(self.start_seats):
+            seat = self.start_seats[i]
             if seat['uuid'] == self.uuid:
                 return i
             i += 1
@@ -214,8 +216,8 @@ class Hero03(BasePokerPlayer):
         other_num = 0
 
         i = 0
-        while i < len(round_state['seats']):
-            seat = round_state['seats'][i]
+        while i < len(self.start_seats):
+            seat = self.start_seats[i]
             if seat['uuid'] == self.uuid:
                 own_stack = seat['stack']
             else:
@@ -243,7 +245,7 @@ class Hero03(BasePokerPlayer):
         self.bb = self.game_info['rule']['small_blind_amount'] * 2
 
     def receive_round_start_message(self, round_count, hole_card, seats):
-        pass
+        self.start_seats = seats
 
     def receive_street_start_message(self, street, round_state):
         pass
