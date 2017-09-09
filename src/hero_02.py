@@ -10,7 +10,7 @@ MULT = 1
 MIN = 0
 MAX = 999999999
 
-class Hero(BasePokerPlayer):
+class Hero02(BasePokerPlayer):
 
     random_percent = 0
     small_stack_bb = 10
