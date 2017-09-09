@@ -1,8 +1,8 @@
-from hero_03 import *
+from hero_04 import *
 
 if __name__ == '__main__':
 
-    player = Hero03()
+    player = Hero04()
 
     while True:
         line = sys.stdin.readline().rstrip()
