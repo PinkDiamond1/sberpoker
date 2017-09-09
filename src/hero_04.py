@@ -38,23 +38,31 @@ class Hero04(BasePokerPlayer):
         own_stack, avg_stack = self.count_stacks(round_state)
         blinds = min(own_stack, avg_stack) / self.bb
 
+        # push/fold
+        if blinds < 14 and round_state['street'] == 'preflop':
+            return self.push_fold(valid_actions, round_state, blinds, c1, c2)
+
+        # short stack
+        # if blinds < 25:
+        #     return # TODO
+
+        # monster
         if round_state['street'] == 'preflop':
-            pair = c1.rank == c2.rank
-            suited = c1.suit == c2.suit
+            return self.play_monster(valid_actions, c1, c2)
+        return self.check_or_fold(valid_actions)
 
-            if blinds < 14:
-                return self.push_fold(valid_actions, round_state, blinds, c1, c2)
+    def play_monster(self, valid_actions, c1, c2):
+        pair = c1.rank == c2.rank
+        suited = c1.suit == c2.suit
+        is_kk_plus = pair and c1.rank > 12
+        is_low_k = min(c1.rank, c2.rank) == 13
+        is_hi_a = max(c1.rank, c2.rank) == 14
+        is_ak = is_low_k and is_hi_a
+        is_aks = is_ak and suited
 
-            is_kk_plus = pair and c1.rank > 12
-
-            is_low_k = min(c1.rank, c2.rank) == 13
-            is_hi_a = max(c1.rank, c2.rank) == 14
-            is_ak = is_low_k and is_hi_a
-            is_aks = is_ak and suited
-
-            if is_kk_plus or is_aks:
-                # print('MONSTER', c1, c2)
-                return self.raise_or_call(valid_actions, MAX)
+        if is_kk_plus or is_aks:
+            # print('MONSTER', c1, c2)
+            return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
     def push_fold(self, valid_actions, round_state, blinds, c1, c2):

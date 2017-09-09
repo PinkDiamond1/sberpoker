@@ -10,7 +10,7 @@ from manic import *
 from randomer import *
 
 STACK = 1500
-GAMES = 100
+GAMES = 50
 
 players = [
     ['Hero04   ', Hero04(), 0, 0],
