@@ -73,11 +73,11 @@ class Hero04(BasePokerPlayer):
                 else: # POS_EA
                     # AA-JJ, AK
                     bet = pair and low >= 11 or hi == 14 and low == 13
-                # if bet:
-                #     bet_size = self.calc_bet_size()
-                #     # TODO compare to stack
-                #     self.did_raise = True
-                #     return self.raise_or_call(valid_actions, bet_size)
+                if bet:
+                    # bet_size = self.calc_bet_size()
+                    # # TODO compare to stack
+                    # self.did_raise = True
+                    return self.raise_or_call(valid_actions, MAX)
             else:
                 if rcount == 1:
                     # resteal
