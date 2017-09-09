@@ -64,13 +64,13 @@ class Hero03(BasePokerPlayer):
         suited = c1.suit == c2.suit
 
         seat = self.get_seat(round_state)
-        position = self.get_position_type(round_state, seat)
+        pos = self.get_position_type(round_state, seat)
 
         raiser_seat = self.get_raiser_seat(round_state)
         if raiser_seat < 0:
-            raiser_position = -1
+            rpos = -1
         else:
-            raiser_position = self.get_position_type(round_state, raiser_seat)
+            rpos = self.get_position_type(round_state, raiser_seat)
 
         pot = self.count_pot(round_state)
         pot_blinds = pot / self.bb
@@ -81,80 +81,86 @@ class Hero03(BasePokerPlayer):
         big_pair = pair and low >= 10
 
         push = False
-        if raiser_position < 0:
+        if rpos < 0:
             # AA-99
             if pair and low >= 9:
                 push = True
             # 88-66
             elif pair and low >= 6:
-                push = blinds <= 10 or position >= POS_MD
+                push = self.is_push(pos, blinds, { POS_EA: 10, POS_MD: MAX })
             # 55-22
             elif pair:
-                push = blinds <= 8 or blinds <= 10 and position >= POS_MD or position >= POS_CO
+                push = self.is_push(pos, blinds, { POS_EA: 8, POS_MD: 10, POS_CO: MAX })
             # AK, AQ
             elif hi == 14 and low >= 12:
                 push = True
             # AJs, ATs
             elif suited and hi == 14 and low >= 10:
-                push = blinds <= 8 or position >= POS_MD
+                push = self.is_push(pos, blinds, { POS_EA: 8, POS_MD: MAX })
             # A9s-A2s
             elif suited and hi == 14:
-                push = blinds <= 5 or blinds <= 7 and position >= POS_MD or blinds <= 10 and position >= POS_CO or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 5, POS_MD: 7, POS_CO: 10, POS_BU: 10, POS_SB: MAX })
             # AJo, ATo
             elif hi == 14 and low >= 10:
-                push = blinds <= 7 or blinds <= 8 and position >= POS_MD or blinds <= 11 and position >= POS_CO or position >= POS_BU
+                push = self.is_push(pos, blinds, { POS_EA: 7, POS_MD: 8, POS_CO: 11, POS_BU: MAX })
             # A9o-A2o
             elif hi == 14:
-                push = blinds <= 5 or blinds <= 7 and position >= POS_CO or blinds <= 9 and position >= POS_BU or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 5, POS_MD: 5, POS_CO: 7, POS_BU: 9, POS_SB: MAX })
             # KQs-K9s, QJs-Q9s, JTs, J9s, T9s
             elif suited and low >= 9:
-                push = blinds <= 8 or blinds <= 10 and position >= POS_MD or position >= POS_CO
+                push = self.is_push(pos, blinds, { POS_EA: 8, POS_MD: 10, POS_CO: MAX })
             # K8s-K4s, Q8s, J8s, T8s, 98s
             elif suited and (low >= 8 or hi == 13 and low >= 4):
-                push = blinds <= 5 or blinds <= 6 and position >= POS_MD or blinds <= 8 and position >= POS_CO or blinds <= 9 and position >= POS_BU or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 5, POS_MD: 6, POS_CO: 8, POS_BU: 9, POS_SB: MAX })
             # KQo-KTo, QJo-QTo, JTo
             elif low >= 10:
-                push = blinds <= 5 or blinds <= 8 and position >= POS_MD or blinds <= 10 and position >= POS_CO or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 5, POS_MD: 8, POS_CO: 10, POS_BU: 10, POS_SB: MAX })
             # Q7s, Q6s
             elif suited and hi == 12 and low >= 6:
-                push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 4, POS_MD: 5, POS_CO: 6, POS_BU: 7, POS_SB: MAX })
             # 97s, 96s, 86s, 76s, 75s, 65s
             elif suited and ((low == 6 or low == 5) and (hi == 9 or hi == 8 or hi == 7) or low == 5 and (hi == 6 or hi == 7)):
-                push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
+                push = self.is_push(pos, blinds, { POS_EA: 4, POS_MD: 5, POS_CO: 6, POS_BU: 7, POS_SB: MAX })
         else:
-        # elif position < POS_SB:
+        # elif pos < POS_SB:
             # AA-JJ
             if pair and low >= 11:
                 push = True
             # TT, 99
             elif pair and low >= 9:
-                push = blinds <= 8 or blinds <= 9 and raiser_position >= POS_MD or blinds <= 11 and raiser_position >= POS_CO
-            # 99, 77
+                push = self.is_push(rpos, blinds, { POS_EA: 8, POS_MD: 9, POS_CO: 11 })
+            # 88, 77
             elif pair and low >= 7:
-                push = blinds <= 5 and raiser_position >= POS_MD or blinds <= 7 and raiser_position >= POS_CO
+                push = self.is_push(rpos, blinds, { POS_MD: 5, POS_CO: 7 })
             # AK
             elif low == 13 and hi == 14:
                 push = True
             # AQ
             elif low == 12 and hi == 14:
-                push = blinds <= 8 or blinds <= 9 and raiser_position >= POS_MD or blinds <= 11 and raiser_position >= POS_CO
+                push = self.is_push(rpos, blinds, { POS_EA: 8, POS_MD: 9, POS_CO: 11 })
             # AJs, ATs
             elif suited and low >= 10 and hi == 14:
-                push = blinds <= 6 and raiser_position >= POS_MD or blinds <= 9 and raiser_position >= POS_CO
+                push = self.is_push(rpos, blinds, { POS_MD: 6, POS_CO: 9 })
             # AJo
             elif low == 11 and hi == 14:
-                push = blinds <= 5 and raiser_position >= POS_MD or blinds <= 7 and raiser_position >= POS_CO
+                push = self.is_push(rpos, blinds, { POS_MD: 5, POS_CO: 7 })
             # ATo, A9s
             elif low == 10 and hi == 14 or suited and low == 9 and hi == 14:
-                push = blinds <= 6 and raiser_position >= POS_CO
-        # elif position == POS_SB:
-        # elif position == POS_BB:
+                push = self.is_push(rpos, blinds, { POS_CO: 6 })
+        # elif pos == POS_SB:
+        # elif pos == POS_BB:
 
         if push:
-            # print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, first_in, position, c1, c2)
-            # print('PUSH', blinds, c1, c2)
+            # if rpos >= 0:
+            #     print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, pos, rpos, c1.rank, c2.rank, suited)
             return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
+
+    def is_push(self, pos, blinds, m):
+        for key in m:
+            if pos >= key and blinds <= m[key]:
+                return True
+        return False
 
     def get_position_type(self, round_state, seat):
         pos_end = self.get_position_end(round_state, seat)
