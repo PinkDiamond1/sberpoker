@@ -26,6 +26,8 @@ class Hero04(BasePokerPlayer):
     game_info = []
     start_seats = []
 
+    did_raise = False
+
     def __init__(self, random_percent=0, small_stack_bb=10):
         self.random_percent = random_percent
         self.small_stack_bb = small_stack_bb
@@ -35,21 +37,74 @@ class Hero04(BasePokerPlayer):
         c1 = Card.from_str(hole_card[0])
         c2 = Card.from_str(hole_card[1])
 
+        # TODO count starting stack
         own_stack, avg_stack = self.count_stacks(round_state)
         blinds = min(own_stack, avg_stack) / self.bb
 
         # push/fold
-        if blinds < 14 and round_state['street'] == 'preflop':
+        if round_state['street'] == 'preflop' and blinds < 14:
             return self.push_fold(valid_actions, round_state, blinds, c1, c2)
 
         # short stack
-        # if blinds < 25:
-        #     return # TODO
+        if blinds < 26:
+            return self.play_short_stack(valid_actions, round_state, c1, c2)
 
         # monster
         if round_state['street'] == 'preflop':
             return self.play_monster(valid_actions, c1, c2)
         return self.check_or_fold(valid_actions)
+
+    def play_short_stack(self, valid_actions, round_state, c1, c2):
+        low = min(c1.rank, c2.rank)
+        hi = max(c1.rank, c2.rank)
+        pair = c1.rank == c2.rank
+
+        pos, rpos, lrpos = self.get_positions_types(round_state)
+        rcount = self.count_raisers(round_state)
+
+        if round_state['street'] == 'preflop':
+            if rcount == 0:
+                if pos >= POS_CO:
+                    # AA-77, AK-AT, KQ
+                    bet = pair and low >= 7 or hi == 14 and low >= 10 or hi == 13 and low == 12
+                elif pos == POS_MD:
+                    # AA-99, AK, AQ
+                    bet = pair and low >= 9 or hi == 14 and low >= 12
+                else: # POS_EA
+                    # AA-JJ, AK
+                    bet = pair and low >= 11 or hi == 14 and low == 13
+                # if bet:
+                #     bet_size = self.calc_bet_size()
+                #     # TODO compare to stack
+                #     self.did_raise = True
+                #     return self.raise_or_call(valid_actions, bet_size)
+            else:
+                if rcount == 1:
+                    # resteal
+                    if rpos >= POS_CO and pos >= POS_SB:
+                        all_in = pair and low >= 8 or hi == 14 and low >= 11
+                    # reraise
+                    else:
+                        # AA-JJ, AK
+                        all_in = pair and low >= 11 or hi == 14 and low == 13
+                elif self.did_raise:
+                    # on resteal
+                    if rcount == 2 and pos >= POS_CO and lrpos >= POS_SB:
+                        # AA-99, AK-AJ
+                        all_in = pair and low >= 9 or hi == 14 and low >= 11
+                    else:
+                        # AA-TT, AK
+                        all_in = pair and low >= 10 or hi == 14 and low == 13
+                else:
+                    # AA, KK
+                    all_in = pair and low >= 13
+                if all_in:
+                    return self.raise_or_call(valid_actions, MAX)
+        # TODO postflop
+        return self.check_or_fold(valid_actions)
+
+    def calc_bet_size(self):
+        pass
 
     def play_monster(self, valid_actions, c1, c2):
         pair = c1.rank == c2.rank
@@ -71,14 +126,7 @@ class Hero04(BasePokerPlayer):
         pair = c1.rank == c2.rank
         suited = c1.suit == c2.suit
 
-        seat = self.get_seat(round_state)
-        pos = self.get_position_type(round_state, seat)
-
-        raiser_seat = self.get_raiser_seat(round_state)
-        if raiser_seat < 0:
-            rpos = -1
-        else:
-            rpos = self.get_position_type(round_state, raiser_seat)
+        pos, rpos, lrpos = self.get_positions_types(round_state)
 
         pot = self.count_pot(round_state)
         pot_blinds = pot / self.bb
@@ -244,6 +292,21 @@ class Hero04(BasePokerPlayer):
                 return True
         return False
 
+    def get_positions_types(self, round_state):
+        seat = self.get_seat(round_state)
+        pos = self.get_position_type(round_state, seat)
+        raiser_seat = self.get_raiser_seat(round_state)
+        if raiser_seat < 0:
+            rpos = -1
+        else:
+            rpos = self.get_position_type(round_state, raiser_seat)
+        last_raiser_seat = self.get_last_raiser_seat(round_state)
+        if last_raiser_seat < 0:
+            lrpos = -1
+        else:
+            lrpos = self.get_position_type(round_state, last_raiser_seat)
+        return pos, rpos, lrpos
+
     def get_position_type(self, round_state, seat):
         pos_end = self.get_position_end(round_state, seat)
 
@@ -323,6 +386,27 @@ class Hero04(BasePokerPlayer):
             i += 1
         raise RuntimeError('Raiser seat not found')
 
+    def get_last_raiser_seat(self, round_state):
+        uuid = self.get_last_raiser_uuid(round_state)
+        if uuid == '':
+            return -1
+        i = 0
+        while i < len(self.start_seats):
+            if self.start_seats[i]['uuid'] == uuid:
+                return i
+            i += 1
+        raise RuntimeError('Raiser seat not found')
+
+    def count_raisers(self, round_state):
+        count = 0
+        i = 0
+        while i < len(round_state['action_histories']['preflop']):
+            action = round_state['action_histories']['preflop'][i]
+            if action['action'] == 'RAISE':
+                count += 1
+            i += 1
+        return count
+
     def get_raiser_uuid(self, round_state):
         i = 0
         while i < len(round_state['action_histories']['preflop']):
@@ -330,6 +414,15 @@ class Hero04(BasePokerPlayer):
             if action['action'] == 'RAISE':
                 return action['uuid']
             i += 1
+        return ''
+
+    def get_last_raiser_uuid(self, round_state):
+        i = len(round_state['action_histories']['preflop']) - 1
+        while i >= 0:
+            action = round_state['action_histories']['preflop'][i]
+            if action['action'] == 'RAISE':
+                return action['uuid']
+            i -= 1
         return ''
 
     def raise_or_call(self, valid_actions, val):
@@ -382,6 +475,7 @@ class Hero04(BasePokerPlayer):
 
     def receive_round_start_message(self, round_count, hole_card, seats):
         self.start_seats = seats
+        self.did_raise = False
 
     def receive_street_start_message(self, street, round_state):
         pass
