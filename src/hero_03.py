@@ -122,10 +122,33 @@ class Hero03(BasePokerPlayer):
             elif suited and ((low == 6 or low == 5) and (hi == 9 or hi == 8 or hi == 7) or low == 5 and (hi == 6 or hi == 7)):
                 push = blinds <= 4 or blinds <= 5 and position >= POS_MD or blinds <= 6 and position >= POS_CO or blinds <= 7 and position >= POS_BU or position >= POS_SB
         else:
-            if   blinds < 3:  push = True
-            elif blinds < 5:  push = pair or medium
-            elif blinds < 10: push = big_pair or big
-            else:             push = monster
+        # elif position < POS_SB:
+            # AA-JJ
+            if pair and low >= 11:
+                push = True
+            # TT, 99
+            elif pair and low >= 9:
+                push = blinds <= 8 or blinds <= 9 and raiser_position >= POS_MD or blinds <= 11 and raiser_position >= POS_CO
+            # 99, 77
+            elif pair and low >= 7:
+                push = blinds <= 5 and raiser_position >= POS_MD or blinds <= 7 and raiser_position >= POS_CO
+            # AK
+            elif low == 13 and hi == 14:
+                push = True
+            # AQ
+            elif low == 12 and hi == 14:
+                push = blinds <= 8 or blinds <= 9 and raiser_position >= POS_MD or blinds <= 11 and raiser_position >= POS_CO
+            # AJs, ATs
+            elif suited and low >= 10 and hi == 14:
+                push = blinds <= 6 and raiser_position >= POS_MD or blinds <= 9 and raiser_position >= POS_CO
+            # AJo
+            elif low == 11 and hi == 14:
+                push = blinds <= 5 and raiser_position >= POS_MD or blinds <= 7 and raiser_position >= POS_CO
+            # ATo, A9s
+            elif low == 10 and hi == 14 or suited and low == 9 and hi == 14:
+                push = blinds <= 6 and raiser_position >= POS_CO
+        # elif position == POS_SB:
+        # elif position == POS_BB:
 
         if push:
             # print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, first_in, position, c1, c2)
