@@ -62,11 +62,18 @@ class Hero03(BasePokerPlayer):
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
         suited = c1.suit == c2.suit
-        position = self.get_position_type(round_state)
+
+        seat = self.get_seat(round_state)
+        position = self.get_position_type(round_state, seat)
+
+        raiser_seat = self.get_raiser_seat(round_state)
+        if raiser_seat < 0:
+            raiser_position = -1
+        else:
+            raiser_position = self.get_position_type(round_state, raiser_seat)
 
         pot = self.count_pot(round_state)
         pot_blinds = pot / self.bb
-        first_in = pot_blinds < 3
 
         medium = low >= 10 and hi >= 10
         big = low + hi >= 24
@@ -74,7 +81,7 @@ class Hero03(BasePokerPlayer):
         big_pair = pair and low >= 10
 
         push = False
-        if first_in:
+        if raiser_position < 0:
             # AA-99
             if pair and low >= 9:
                 push = True
@@ -126,9 +133,8 @@ class Hero03(BasePokerPlayer):
             return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
-    def get_position_type(self, round_state):
-        seat = self.get_seat(round_state)
-        pos_end = self.get_position_end(round_state)
+    def get_position_type(self, round_state, seat):
+        pos_end = self.get_position_end(round_state, seat)
 
         if seat == round_state['small_blind_pos']:
             return POS_SB
@@ -150,7 +156,7 @@ class Hero03(BasePokerPlayer):
             return POS_MD
         return POS_EA
 
-    def get_position_end(self, round_state):
+    def get_position_end(self, round_state, seat):
         count = 0
         i = 0
         while i < len(self.start_seats):
@@ -158,10 +164,9 @@ class Hero03(BasePokerPlayer):
             if s['stack'] > 0:
                 count += 1
             i += 1
-        return count - 1 - self.get_position(round_state)
+        return count - 1 - self.get_position(round_state, seat)
 
-    def get_position(self, round_state):
-        seat = self.get_seat(round_state)
+    def get_position(self, round_state, seat):
         position = 0
         found = False
         i = round_state['small_blind_pos']
@@ -195,6 +200,26 @@ class Hero03(BasePokerPlayer):
                 return i
             i += 1
         raise RuntimeError('Seat not found')
+
+    def get_raiser_seat(self, round_state):
+        uuid = self.get_raiser_uuid(round_state)
+        if uuid == '':
+            return -1
+        i = 0
+        while i < len(self.start_seats):
+            if self.start_seats[i]['uuid'] == uuid:
+                return i
+            i += 1
+        raise RuntimeError('Raiser seat not found')
+
+    def get_raiser_uuid(self, round_state):
+        i = 0
+        while i < len(round_state['action_histories']['preflop']):
+            action = round_state['action_histories']['preflop'][i]
+            if action['action'] == 'RAISE':
+                return action['uuid']
+            i += 1
+        return ''
 
     def raise_or_call(self, valid_actions, val):
         if valid_actions[2]['amount']['max'] < 0:
