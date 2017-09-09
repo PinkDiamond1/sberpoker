@@ -53,7 +53,7 @@ class Hero03(BasePokerPlayer):
             is_aks = is_ak and suited
 
             if is_kk_plus or is_aks:
-                # print 'MONSTER', c1, c2
+                # print('MONSTER', c1, c2)
                 return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
@@ -121,8 +121,8 @@ class Hero03(BasePokerPlayer):
             else:             push = monster
 
         if push:
-            # print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, first_in, position, c1, c2
-            # print 'PUSH', blinds, c1, c2
+            # print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', blinds, first_in, position, c1, c2)
+            # print('PUSH', blinds, c1, c2)
             return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
@@ -136,13 +136,13 @@ class Hero03(BasePokerPlayer):
             return POS_BB
         if seat == round_state['dealer_btn']:
             if pos_end != 0:
-                print seat, pos_end
-                print json.dumps(round_state, indent=2, sort_keys=True)
+                print(seat, pos_end)
+                print(json.dumps(round_state, indent=2, sort_keys=True))
                 raise RuntimeError('pos_end != 0')
             return POS_BU
         if pos_end == 0:
-            print seat, pos_end
-            print json.dumps(round_state, indent=2, sort_keys=True)
+            print(seat, pos_end)
+            print(json.dumps(round_state, indent=2, sort_keys=True))
             raise RuntimeError('pos_end == 0')
         if pos_end == 1:
             return POS_CO

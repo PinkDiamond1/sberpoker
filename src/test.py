@@ -33,7 +33,7 @@ players = [
 ]
 
 for g in range(GAMES):
-    print g
+    print(g)
 
     config = setup_config(max_round=50, initial_stack=STACK, small_blind_amount=15)
 
@@ -43,7 +43,7 @@ for g in range(GAMES):
         i += 1
 
     game_result = start_poker(config, verbose=0)
-    # print json.dumps(game_result['players'], indent=2, sort_keys=True)
+    # print(json.dumps(game_result['players'], indent=2, sort_keys=True))
 
     i = 0
     while i < len(game_result['players']):
@@ -56,5 +56,5 @@ for g in range(GAMES):
 i = 0
 while i < len(players):
     config.register_player(name=players[i][0], algorithm=players[i][1])
-    print players[i][0], players[i][2] / GAMES, players[i][3] * 100 / GAMES
+    print(players[i][0], players[i][2] / GAMES, players[i][3] * 100 / GAMES)
     i += 1
