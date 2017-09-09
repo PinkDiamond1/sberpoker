@@ -9,8 +9,8 @@ from honest import *
 from manic import *
 from randomer import *
 
-STACK = 1500
-GAMES = 100
+STACK = 700
+GAMES = 30
 
 players = [
     ['Hero04   ', Hero04(), 0, 0],

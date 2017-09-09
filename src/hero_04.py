@@ -37,7 +37,6 @@ class Hero04(BasePokerPlayer):
         c1 = Card.from_str(hole_card[0])
         c2 = Card.from_str(hole_card[1])
 
-        # TODO count starting stack
         own_stack, avg_stack = self.count_stacks(round_state)
         blinds = min(own_stack, avg_stack) / self.bb
 
@@ -59,6 +58,8 @@ class Hero04(BasePokerPlayer):
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
 
+        own_stack, avg_stack = self.count_stacks(round_state)
+
         pos, rpos, lrpos = self.get_positions_types(round_state)
         rcount = self.count_raisers(round_state)
 
@@ -74,10 +75,12 @@ class Hero04(BasePokerPlayer):
                     # AA-JJ, AK
                     bet = pair and low >= 11 or hi == 14 and low == 13
                 if bet:
-                    # bet_size = self.calc_bet_size()
-                    # # TODO compare to stack
-                    # self.did_raise = True
-                    return self.raise_or_call(valid_actions, MAX)
+                    self.did_raise = True
+                    bet_size_blinds = self.calc_bet_size_short_stack_preflop(round_state)
+                    bet_size = bet_size_blinds * self.bb
+                    if bet_size * 3 > own_stack:
+                        bet_size = MAX
+                    return self.raise_or_call(valid_actions, bet_size)
             else:
                 if rcount == 1:
                     # resteal
@@ -103,8 +106,15 @@ class Hero04(BasePokerPlayer):
         # TODO postflop
         return self.check_or_fold(valid_actions)
 
-    def calc_bet_size(self):
-        pass
+    def calc_bet_size_short_stack_preflop(self, round_state):
+        blinds = 4
+        i = 0
+        while i < len(round_state['action_histories']['preflop']):
+            action = round_state['action_histories']['preflop'][i]
+            if action['action'] == 'CALL':
+                blinds += 1
+            i += 1
+        return blinds
 
     def play_monster(self, valid_actions, c1, c2):
         pair = c1.rank == c2.rank
