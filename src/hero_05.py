@@ -51,7 +51,7 @@ class Hero05(BasePokerPlayer):
             return self.play_short_stack(valid_actions, round_state, c1, c2)
 
         # mid stack
-        if self.mid or round_state['street'] == 'preflop' and blinds < self.ins(51):
+        if self.mid or round_state['street'] == 'preflop':# and blinds < self.ins(51):
             return self.play_mid_stack(valid_actions, round_state, c1, c2)
 
         # monster
