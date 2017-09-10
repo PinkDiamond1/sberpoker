@@ -62,6 +62,8 @@ class Hero04(BasePokerPlayer):
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
 
+        ccards = self.get_community_cards(round_state)
+
         if round_state['street'] == 'preflop':
             own_stack, avg_stack = self.count_starting_stacks(round_state)
             pos, rpos, lrpos = self.get_positions_types(round_state)
@@ -113,7 +115,7 @@ class Hero04(BasePokerPlayer):
 
             bet_size = 0
             # TODO need stronger hand if did not do a preflop raise
-            if self.has_something(round_state, c1, c2):
+            if self.has_something(round_state, c1, c2, ccards):
                 if rcount == 0:
                     bet_size = pot * 2 / 3
                 else:
@@ -129,33 +131,116 @@ class Hero04(BasePokerPlayer):
                     bet_size = MAX
                 return self.raise_or_call(valid_actions, bet_size)
         elif round_state['street'] == 'turn':
-            if self.has_something(round_state, c1, c2):
+            if self.has_something(round_state, c1, c2, ccards):
                 return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
-    def has_something(self, round_state, c1, c2):
-        return self.has_mid_pair(round_state, c1, c2) or self.has_top_pair(round_state, c1, c2) or self.has_over_pair(round_state, c1, c2) or self.has_oesd(round_state, c1, c2) or self.has_flush_draw(round_state, c1, c2) or self.has_two_pairs(round_state, c1, c2) or self.has_set(round_state, c1, c2)
+    def has_something(self, round_state, c1, c2, ccards):
+        mid = self.has_mid_pair(round_state, c1, c2, ccards)
+        top = self.has_top_pair(round_state, c1, c2, ccards)
+        over = self.has_over_pair(round_state, c1, c2, ccards)
+        oesd = self.has_oesd(round_state, c1, c2, ccards)
+        fd = self.has_flush_draw(round_state, c1, c2, ccards)
+        two = self.has_two_pairs(round_state, c1, c2, ccards)
+        three = self.has_set(round_state, c1, c2, ccards)
+        has = mid or top or over or oesd or fd or two or three
+        # if has:
+        #     cs = []
+        #     for c in ccards:
+        #         cs.append((c.rank, c.suit))
+        #     print((c1.rank, c1.suit), (c2.rank, c2.suit), cs)
+        #     print({ 'mid': mid, 'top': top, 'over': over, 'oesd': oesd, 'fd': fd, 'two': two, 'three': three })
+        return has
 
-    def has_mid_pair(self, round_state, c1, c2):
+    def has_mid_pair(self, round_state, c1, c2, ccards):
+        if c1.rank != c2.rank:
+            return False
+        bigger = 0
+        for c in ccards:
+            if c1.rank <= c.rank:
+                bigger += 1
+        return bigger == 1
+
+    def has_top_pair(self, round_state, c1, c2, ccards):
+        max_rank = 0
+        for c in ccards:
+            if c.rank > max_rank:
+                max_rank = c.rank
+        return c1.rank == max_rank or c2.rank == max_rank
+
+    def has_over_pair(self, round_state, c1, c2, ccards):
+        if c1.rank != c2.rank:
+            return False
+        for c in ccards:
+            if c1.rank <= c.rank:
+                return False
+        return True
+
+    def has_oesd(self, round_state, c1, c2, ccards):
+        ranks = [c1.rank, c2.rank]
+        for c in ccards:
+            ranks.append(c.rank)
+        ranks = list(set(ranks))
+        ranks.sort()
+        last = 0
+        count = 0
+        for r in ranks:
+            if last > 0:
+                if r == last + 1:
+                    last = r
+                    count += 1
+                    if count >= 4:
+                        return True
+                else:
+                    last = 0
+                    count = 0
+            else:
+                last = r
+                count = 1
         return False
 
-    def has_top_pair(self, round_state, c1, c2):
+    def has_flush_draw(self, round_state, c1, c2, ccards):
+        suits = { 2: 0 , 4: 0, 8: 0, 16: 0 }
+        suits[c1.suit] += 1
+        suits[c2.suit] += 1
+        for c in ccards:
+            suits[c.suit] += 1
+        for s in suits:
+            if suits[s] >= 4:
+                return True
         return False
 
-    def has_over_pair(self, round_state, c1, c2):
+    def has_two_pairs(self, round_state, c1, c2, ccards):
+        ranks = { 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0 }
+        ranks[c1.rank] += 1
+        ranks[c2.rank] += 1
+        for c in ccards:
+            ranks[c.rank] += 1
+        pairs = 0
+        for r in ranks:
+            if ranks[r] >= 2:
+                pairs += 1
+        return pairs > 1
+
+    def has_set(self, round_state, c1, c2, ccards):
+        ranks = { 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0 }
+        ranks[c1.rank] += 1
+        ranks[c2.rank] += 1
+        for c in ccards:
+            ranks[c.rank] += 1
+        for r in ranks:
+            if ranks[r] >= 3:
+                return True
         return False
 
-    def has_oesd(self, round_state, c1, c2):
-        return False
-
-    def has_flush_draw(self, round_state, c1, c2):
-        return False
-
-    def has_two_pairs(self, round_state, c1, c2):
-        return False
-
-    def has_set(self, round_state, c1, c2):
-        return False
+    def get_community_cards(self, round_state):
+        cards = []
+        i = 0
+        while i < len(round_state['community_card']):
+            c = Card.from_str(round_state['community_card'][i])
+            cards.append(c)
+            i += 1
+        return cards
 
     def calc_bet_size_short_stack_preflop(self, round_state):
         blinds = 4
@@ -176,7 +261,7 @@ class Hero04(BasePokerPlayer):
         is_ak = is_low_k and is_hi_a
         is_aks = is_ak and suited
 
-        if is_kk_plus or is_aks:
+        if is_kk_plus:# or is_aks:
             # print('MONSTER', c1, c2)
             return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)

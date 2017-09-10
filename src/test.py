@@ -9,6 +9,8 @@ from honest import *
 from manic import *
 from randomer import *
 
+# TODO blinds strategy ratio
+
 STACK = 700
 GAMES = 30
 
@@ -53,8 +55,6 @@ for g in range(GAMES):
             players[i][3] += 1
         i += 1
 
-i = 0
-while i < len(players):
-    config.register_player(name=players[i][0], algorithm=players[i][1])
-    print(players[i][0], players[i][2] / GAMES, players[i][3] * 100 / GAMES)
-    i += 1
+for p in players:
+    config.register_player(name=p[0], algorithm=p[1])
+    print(p[0], p[2] / GAMES, p[3] * 100 / GAMES)
