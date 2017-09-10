@@ -26,6 +26,7 @@ class Hero05(BasePokerPlayer):
     start_seats = []
 
     did_raise_preflop = False
+    did_raise_turn = False
     short = False
     mid = False
     bluff = False
@@ -165,7 +166,23 @@ class Hero05(BasePokerPlayer):
                 bet_size = pot * 2 / 3
                 if bet_size * 2 > own_stack:
                     bet_size = MAX
+                self.did_raise_turn = True
                 return self.raise_or_call(valid_actions, bet_size)
+        else round_state['street'] == 'river':
+            monster = self.has_monster(round_state, c1, c2, ccards)
+            over = self.has_over_pair(round_state, c1, c2, ccards)
+            top = self.has_top_pair(round_state, c1, c2, ccards)
+
+            has_good = monster or over or top and self.did_raise_turn
+            has = has_good or top
+
+            if has_good or has and rcount == 0:
+                bet_size = pot * 2 / 3
+                if bet_size * 2 > own_stack:
+                    bet_size = MAX
+                return self.raise_or_call(valid_actions, bet_size)
+            elif has:
+                return self.call(valid_actions)
         return self.check_or_fold(valid_actions)
 
     def calc_bet_size_mid_stack_preflop(self, round_state):
@@ -722,17 +739,20 @@ class Hero05(BasePokerPlayer):
 
     def raise_or_call(self, valid_actions, val):
         if valid_actions[2]['amount']['max'] < 0:
-            return 'call', valid_actions[1]['amount']
+            return self.call(valid_actions)
         elif valid_actions[2]['amount']['max'] < val:
             return 'raise', valid_actions[2]['amount']['max']
         elif val < valid_actions[2]['amount']['min']:
             return 'raise', valid_actions[2]['amount']['min']
         return 'raise', val
 
+    def call(self, valid_actions):
+        return 'call', valid_actions[1]['amount']
+
     def check_or_fold(self, valid_actions):
         if valid_actions[1]['amount'] > 0:
             return 'fold', 0
-        return 'call', 0
+        return self.call(valid_actions)
 
     def count_current_stacks(self, round_state):
         return self.count_stacks(round_state, round_state['seats'])
@@ -781,6 +801,7 @@ class Hero05(BasePokerPlayer):
         self.start_seats = seats
         self.short = False
         self.did_raise_preflop = False
+        self.did_raise_turn = False
         self.bluff = False
 
     def receive_street_start_message(self, street, round_state):
