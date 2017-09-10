@@ -150,6 +150,22 @@ class Hero05(BasePokerPlayer):
                 if bet_size * 2 > own_stack:
                     bet_size = MAX
                 return self.raise_or_call(valid_actions, bet_size)
+        elif round_state['street'] == 'turn':
+            rcount = self.count_flop_raisers(round_state)
+
+            monster = self.has_monster(round_state, c1, c2, ccards)
+            over = self.has_over_pair(round_state, c1, c2, ccards)
+            top = self.has_top_pair(round_state, c1, c2, ccards)
+            monster_draw = self.has_monster_draw(round_state, c1, c2, ccards)
+
+            has_good = monster or over or monster_draw
+            has = has_good or top
+
+            if has_good or has and rcount == 0:
+                bet_size = pot * 2 / 3
+                if bet_size * 2 > own_stack:
+                    bet_size = MAX
+                return self.raise_or_call(valid_actions, bet_size)
         return self.check_or_fold(valid_actions)
 
     def calc_bet_size_mid_stack_preflop(self, round_state):
