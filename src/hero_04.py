@@ -8,7 +8,7 @@ from pypokerengine.engine.card import Card
 MULT = 1
 
 MIN = 0
-MAX = 999999999
+MAX = 99999999
 
 POS_SB = 105
 POS_BB = 104
@@ -27,6 +27,8 @@ class Hero04(BasePokerPlayer):
     start_seats = []
 
     did_raise = False
+    short = False
+    bluff = False
 
     def __init__(self, random_percent=0, small_stack_bb=10):
         self.random_percent = random_percent
@@ -37,7 +39,7 @@ class Hero04(BasePokerPlayer):
         c1 = Card.from_str(hole_card[0])
         c2 = Card.from_str(hole_card[1])
 
-        own_stack, avg_stack = self.count_stacks(round_state)
+        own_stack, avg_stack = self.count_starting_stacks(round_state)
         blinds = min(own_stack, avg_stack) / self.bb
 
         # push/fold
@@ -45,7 +47,7 @@ class Hero04(BasePokerPlayer):
             return self.push_fold(valid_actions, round_state, blinds, c1, c2)
 
         # short stack
-        if blinds < 26:
+        if round_state['street'] == 'preflop' and blinds < 26 or self.short:
             return self.play_short_stack(valid_actions, round_state, c1, c2)
 
         # monster
@@ -54,16 +56,17 @@ class Hero04(BasePokerPlayer):
         return self.check_or_fold(valid_actions)
 
     def play_short_stack(self, valid_actions, round_state, c1, c2):
+        self.short = True
+
         low = min(c1.rank, c2.rank)
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
 
-        own_stack, avg_stack = self.count_stacks(round_state)
-
-        pos, rpos, lrpos = self.get_positions_types(round_state)
-        rcount = self.count_raisers(round_state)
-
         if round_state['street'] == 'preflop':
+            own_stack, avg_stack = self.count_starting_stacks(round_state)
+            pos, rpos, lrpos = self.get_positions_types(round_state)
+            rcount = self.count_preflop_raisers(round_state)
+
             if rcount == 0:
                 if pos >= POS_CO:
                     # AA-77, AK-AT, KQ
@@ -75,7 +78,6 @@ class Hero04(BasePokerPlayer):
                     # AA-JJ, AK
                     bet = pair and low >= 11 or hi == 14 and low == 13
                 if bet:
-                    self.did_raise = True
                     bet_size_blinds = self.calc_bet_size_short_stack_preflop(round_state)
                     bet_size = bet_size_blinds * self.bb
                     if bet_size * 3 > own_stack:
@@ -103,8 +105,57 @@ class Hero04(BasePokerPlayer):
                     all_in = pair and low >= 13
                 if all_in:
                     return self.raise_or_call(valid_actions, MAX)
-        # TODO postflop
+        elif round_state['street'] == 'flop':
+            own_stack, avg_stack = self.count_current_stacks(round_state)
+            pot = self.count_pot(round_state)
+            rcount = self.count_flop_raisers(round_state)
+            pcount = self.count_players(round_state)
+
+            bet_size = 0
+            # TODO need stronger hand if did not do a preflop raise
+            if self.has_something(round_state, c1, c2):
+                if rcount == 0:
+                    bet_size = pot * 2 / 3
+                else:
+                    bet_size = MAX
+            elif pot >= own_stack * 2:
+                bet_size = MAX
+            elif not self.bluff and self.did_raise and rcount == 0 and pcount == 2:
+                self.bluff = True
+                bet_size = pot * 2 / 3
+
+            if bet_size > 0:
+                if bet_size * 2 > own_stack:
+                    bet_size = MAX
+                return self.raise_or_call(valid_actions, bet_size)
+        elif round_state['street'] == 'turn':
+            if self.has_something(round_state, c1, c2):
+                return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
+
+    def has_something(self, round_state, c1, c2):
+        return self.has_mid_pair(round_state, c1, c2) or self.has_top_pair(round_state, c1, c2) or self.has_over_pair(round_state, c1, c2) or self.has_oesd(round_state, c1, c2) or self.has_flush_draw(round_state, c1, c2) or self.has_two_pairs(round_state, c1, c2) or self.has_set(round_state, c1, c2)
+
+    def has_mid_pair(self, round_state, c1, c2):
+        return False
+
+    def has_top_pair(self, round_state, c1, c2):
+        return False
+
+    def has_over_pair(self, round_state, c1, c2):
+        return False
+
+    def has_oesd(self, round_state, c1, c2):
+        return False
+
+    def has_flush_draw(self, round_state, c1, c2):
+        return False
+
+    def has_two_pairs(self, round_state, c1, c2):
+        return False
+
+    def has_set(self, round_state, c1, c2):
+        return False
 
     def calc_bet_size_short_stack_preflop(self, round_state):
         blinds = 4
@@ -407,11 +458,29 @@ class Hero04(BasePokerPlayer):
             i += 1
         raise RuntimeError('Raiser seat not found')
 
-    def count_raisers(self, round_state):
+    def count_players(self, round_state):
         count = 0
         i = 0
-        while i < len(round_state['action_histories']['preflop']):
-            action = round_state['action_histories']['preflop'][i]
+        while i < len(round_state['seats']):
+            seat = round_state['seats'][i]
+            if seat['state'] == 'participating' or seat['state'] == 'allin':
+                count += 1
+            elif seat['state'] != 'folded':
+                raise RuntimeError('Unknown state {}', seat['state'])
+            i += 1
+        return count
+
+    def count_flop_raisers(self, round_state):
+        return self.count_raisers(round_state, 'flop')
+
+    def count_preflop_raisers(self, round_state):
+        return self.count_raisers(round_state, 'preflop')
+
+    def count_raisers(self, round_state, street):
+        count = 0
+        i = 0
+        while i < len(round_state['action_histories'][street]):
+            action = round_state['action_histories'][street][i]
             if action['action'] == 'RAISE':
                 count += 1
             i += 1
@@ -436,6 +505,7 @@ class Hero04(BasePokerPlayer):
         return ''
 
     def raise_or_call(self, valid_actions, val):
+        self.did_raise = True
         if valid_actions[2]['amount']['max'] < 0:
             return 'call', valid_actions[1]['amount']
         elif valid_actions[2]['amount']['max'] < val:
@@ -449,19 +519,28 @@ class Hero04(BasePokerPlayer):
             return 'fold', 0
         return 'call', 0
 
-    def count_stacks(self, round_state):
+    def count_current_stacks(self, round_state):
+        return self.count_stacks(round_state, round_state['seats'])
+
+    def count_starting_stacks(self, round_state):
+        return self.count_stacks(round_state, self.start_seats)
+
+    def count_stacks(self, round_state, seats):
         own_stack = 0
         other_sum = 0
         other_num = 0
 
         i = 0
-        while i < len(self.start_seats):
-            seat = self.start_seats[i]
-            if seat['uuid'] == self.uuid:
-                own_stack = seat['stack']
-            else:
-                other_sum += seat['stack']
-                other_num += 1
+        while i < len(seats):
+            seat = seats[i]
+            if seat['state'] == 'participating' or seat['state'] == 'allin':
+                if seat['uuid'] == self.uuid:
+                    own_stack = seat['stack']
+                else:
+                    other_sum += seat['stack']
+                    other_num += 1
+            elif seat['state'] != 'folded':
+                raise RuntimeError('Unknown state {}', seat['state'])
             i += 1
 
         if other_num > 0:
@@ -485,7 +564,9 @@ class Hero04(BasePokerPlayer):
 
     def receive_round_start_message(self, round_count, hole_card, seats):
         self.start_seats = seats
+        self.short = False
         self.did_raise = False
+        self.bluff = False
 
     def receive_street_start_message(self, street, round_state):
         pass
