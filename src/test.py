@@ -4,6 +4,7 @@ from hero_01 import *
 from hero_02 import *
 from hero_03 import *
 from hero_04 import *
+from hero_05 import *
 from fish import *
 from honest import *
 from manic import *
@@ -12,10 +13,10 @@ from randomer import *
 # TODO blinds strategy ratio
 
 STACK = 1500
-GAMES = 200
+GAMES = 100
 
 players = [
-    ['Hero04   ', Hero04(1.0), 0, 0],
+    ['Hero05   ', Hero05(1.0), 0, 0],
     # ['Hero03   ', Hero03(), 0, 0],
     # ['Randomer1', Randomer(), 0, 0],
     # ['Hero02   ', Hero02(), 0, 0],

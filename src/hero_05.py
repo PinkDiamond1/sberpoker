@@ -62,12 +62,13 @@ class Hero05(BasePokerPlayer):
     def ins(self, val):
         return val * self.insanity
 
-    def play_mid_stack(self, valid_actions, round_state):
+    def play_mid_stack(self, valid_actions, round_state, c1, c2):
         self.mid = True
 
         low = min(c1.rank, c2.rank)
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
+        suited = c1.suit == c1.suit
 
         ccards = self.get_community_cards(round_state)
         own_stack, avg_stack = self.count_current_stacks(round_state)
@@ -81,13 +82,13 @@ class Hero05(BasePokerPlayer):
             if rcount == 0:
                 if pos >= POS_CO:
                     # AA-77, AK-AT, A9s, KQ
-                    bet = pair and low >= 7 or hi = 14 and (low >= 10 or suited and low == 9) or hi == 13 and low = 12
+                    bet = pair and low >= 7 or hi == 14 and (low >= 10 or suited and low == 9) or hi == 13 and low == 12
                 elif pos >= POS_MD:
                     # AA-88, AK-AJ, ATs
-                    bet = pair and low >= 8  or hi = 14 and (low >= 11 or suited and low == 10)
+                    bet = pair and low >= 8 or hi == 14 and (low >= 11 or suited and low == 10)
                 else:
                     # AA-TT, AK, AQ, AJs
-                    bet = pair and low >= 10 or hi = 14 and (low >= 12 or suited and low == 11)
+                    bet = pair and low >= 10 or hi == 14 and (low >= 12 or suited and low == 11)
                 if bet:
                     bet_size = self.calc_bet_size_mid_stack_preflop(round_state)
             elif self.did_raise_preflop:
@@ -129,19 +130,19 @@ class Hero05(BasePokerPlayer):
             pcount = self.count_players(round_state)
             rcount = self.count_flop_raisers(round_state)
 
-            monster = self.has_monster(round_state, c1, c2, ccards)
-            over = self.has_over_pair(round_state, c1, c2, ccards)
-            top = self.has_top_pair(round_state, c1, c2, ccards)
-            monster_draw = self.has_monster_draw(round_state, c1, c2, ccards)
-            oesd = self.has_oesd(round_state, c1, c2, ccards)
-            fd = self.has_flush_draw(round_state, c1, c2, ccards)
-            dgs = self.has_double_gutshot(round_state, c1, c2, ccards)
+            monster = self.has_monster(c1, c2, ccards)
+            over = self.has_over_pair(c1, c2, ccards)
+            top = self.has_top_pair(c1, c2, ccards)
+            monster_draw = self.has_monster_draw(c1, c2, ccards)
+            oesd = self.has_oesd(c1, c2, ccards)
+            fd = self.has_flush_draw(c1, c2, ccards)
+            dgs = self.has_double_gutshot(c1, c2, ccards)
 
             has_good = monster or over or monster_draw
             has = has_good or top or oesd or fd or dgs
 
             # More than one opponent or draw board
-            if pcount > 2 or self.is_dangerous_board(round_state):
+            if pcount > 2 or self.is_dangerous_board(round_state, c1, c2, ccards):
                 bet = has_good or has and rcount == 0
             # Safe flop
             else:
@@ -154,10 +155,10 @@ class Hero05(BasePokerPlayer):
         elif round_state['street'] == 'turn':
             rcount = self.count_flop_raisers(round_state)
 
-            monster = self.has_monster(round_state, c1, c2, ccards)
-            over = self.has_over_pair(round_state, c1, c2, ccards)
-            top = self.has_top_pair(round_state, c1, c2, ccards)
-            monster_draw = self.has_monster_draw(round_state, c1, c2, ccards)
+            monster = self.has_monster(c1, c2, ccards)
+            over = self.has_over_pair(c1, c2, ccards)
+            top = self.has_top_pair(c1, c2, ccards)
+            monster_draw = self.has_monster_draw(c1, c2, ccards)
 
             has_good = monster or over or monster_draw
             has = has_good or top
@@ -168,10 +169,10 @@ class Hero05(BasePokerPlayer):
                     bet_size = MAX
                 self.did_raise_turn = True
                 return self.raise_or_call(valid_actions, bet_size)
-        else round_state['street'] == 'river':
-            monster = self.has_monster(round_state, c1, c2, ccards)
-            over = self.has_over_pair(round_state, c1, c2, ccards)
-            top = self.has_top_pair(round_state, c1, c2, ccards)
+        elif round_state['street'] == 'river':
+            monster = self.has_monster(c1, c2, ccards)
+            over = self.has_over_pair(c1, c2, ccards)
+            top = self.has_top_pair(c1, c2, ccards)
 
             has_good = monster or over or top and self.did_raise_turn
             has = has_good or top
@@ -258,7 +259,7 @@ class Hero05(BasePokerPlayer):
 
             bet_size = 0
             # TODO need stronger hand if did not do a preflop raise
-            if self.has_something(round_state, c1, c2, ccards):
+            if self.has_something(c1, c2, ccards):
                 if rcount == 0:
                     bet_size = pot * 2 / 3
                 else:
@@ -274,19 +275,20 @@ class Hero05(BasePokerPlayer):
                     bet_size = MAX
                 return self.raise_or_call(valid_actions, bet_size)
         elif round_state['street'] == 'turn':
-            if self.has_something(round_state, c1, c2, ccards):
+            if self.has_something(c1, c2, ccards):
                 return self.raise_or_call(valid_actions, MAX)
         return self.check_or_fold(valid_actions)
 
-    def has_something(self, round_state, c1, c2, ccards):
-        mid = self.has_mid_pair(round_state, c1, c2, ccards)
-        top = self.has_top_pair(round_state, c1, c2, ccards)
-        over = self.has_over_pair(round_state, c1, c2, ccards)
-        oesd = self.has_oesd(round_state, c1, c2, ccards)
-        fd = self.has_flush_draw(round_state, c1, c2, ccards)
-        two = self.has_two_pairs(round_state, c1, c2, ccards)
-        three = self.has_set(round_state, c1, c2, ccards)
-        has = mid or top or over or oesd or fd or two or three
+    def has_something(self, c1, c2, ccards):
+        mid = self.has_mid_pair(c1, c2, ccards)
+        top = self.has_top_pair(c1, c2, ccards)
+        over = self.has_over_pair(c1, c2, ccards)
+        oesd = self.has_oesd(c1, c2, ccards)
+        dgs = self.has_double_gutshot(c1, c2, ccards)
+        fd = self.has_flush_draw(c1, c2, ccards)
+        two = self.has_two_pairs(c1, c2, ccards)
+        three = self.has_set(c1, c2, ccards)
+        has = mid or top or over or oesd or dgs or fd or two or three
         # if has:
         #     cs = []
         #     for c in ccards:
@@ -295,7 +297,7 @@ class Hero05(BasePokerPlayer):
         #     print({ 'mid': mid, 'top': top, 'over': over, 'oesd': oesd, 'fd': fd, 'two': two, 'three': three })
         return has
 
-    def has_mid_pair(self, round_state, c1, c2, ccards):
+    def has_mid_pair(self, c1, c2, ccards):
         if c1.rank != c2.rank:
             return False
         bigger = 0
@@ -304,14 +306,14 @@ class Hero05(BasePokerPlayer):
                 bigger += 1
         return bigger == 1
 
-    def has_top_pair(self, round_state, c1, c2, ccards):
+    def has_top_pair(self, c1, c2, ccards):
         max_rank = 0
         for c in ccards:
             if c.rank > max_rank:
                 max_rank = c.rank
         return c1.rank == max_rank or c2.rank == max_rank
 
-    def has_over_pair(self, round_state, c1, c2, ccards):
+    def has_over_pair(self, c1, c2, ccards):
         if c1.rank != c2.rank:
             return False
         for c in ccards:
@@ -319,7 +321,15 @@ class Hero05(BasePokerPlayer):
                 return False
         return True
 
-    def has_oesd(self, round_state, c1, c2, ccards):
+    def has_oesd(self, c1, c2, ccards):
+        # TODO Do not count A at both sides
+        return self.has_straight(c1, c2, ccards, 4)
+
+    def has_double_gutshot(self, c1, c2, ccards):
+        # TODO Implement
+        return False
+
+    def has_straight(self, c1, c2, ccards, num=5):
         ranks = [c1.rank, c2.rank]
         for c in ccards:
             ranks.append(c.rank)
@@ -342,18 +352,34 @@ class Hero05(BasePokerPlayer):
                 count = 1
         return False
 
-    def has_flush_draw(self, round_state, c1, c2, ccards):
+    def has_flush_draw(self, c1, c2, ccards):
+        return self.has_flush(c1, c2, ccards, 4)
+
+    def has_flush(self, c1, c2, ccards, num=5):
         suits = { 2: 0 , 4: 0, 8: 0, 16: 0 }
         suits[c1.suit] += 1
         suits[c2.suit] += 1
         for c in ccards:
             suits[c.suit] += 1
         for s in suits:
-            if suits[s] >= 4:
+            if suits[s] >= num:
                 return True
         return False
 
-    def has_two_pairs(self, round_state, c1, c2, ccards):
+    def has_monster_draw(self, c1, c2, ccards):
+        fd = self.has_flush_draw(c1, c2, ccards)
+        oesd = self.has_oesd(c1, c2, ccards)
+        dgs = self.has_double_gutshot(c1, c2, ccards)
+        return fd and (oesd or dgs)
+
+    def has_monster(self, c1, c2, ccards):
+        two = self.has_two_pairs(c1, c2, ccards)
+        three = self.has_set(c1, c2, ccards)
+        flush = self.has_flush(c1, c2, ccards)
+        straight = self.has_straight(c1, c2, ccards)
+        return two or three or flush or straight
+
+    def has_two_pairs(self, c1, c2, ccards):
         ranks = { 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0 }
         ranks[c1.rank] += 1
         ranks[c2.rank] += 1
@@ -365,7 +391,7 @@ class Hero05(BasePokerPlayer):
                 pairs += 1
         return pairs > 1
 
-    def has_set(self, round_state, c1, c2, ccards):
+    def has_set(self, c1, c2, ccards):
         ranks = { 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0 }
         ranks[c1.rank] += 1
         ranks[c2.rank] += 1
@@ -377,7 +403,8 @@ class Hero05(BasePokerPlayer):
         return False
 
     def is_dangerous_board(self, round_state, c1, c2, ccards):
-        return False # TODO
+        # TODO Implement
+        return False
 
     def get_community_cards(self, round_state):
         cards = []
