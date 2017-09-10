@@ -19,8 +19,7 @@ POS_EA = 100
 
 class Hero04(BasePokerPlayer):
 
-    random_percent = 0
-    small_stack_bb = 10
+    insanity = 1.0
 
     bb = 0
     game_info = []
@@ -30,9 +29,8 @@ class Hero04(BasePokerPlayer):
     short = False
     bluff = False
 
-    def __init__(self, random_percent=0, small_stack_bb=10):
-        self.random_percent = random_percent
-        self.small_stack_bb = small_stack_bb
+    def __init__(self, insanity=1.0):
+        self.insanity = insanity
 
     def declare_action(self, valid_actions, hole_card, round_state, bot_state=None):
         rnd = random.randint(1,101)
@@ -43,17 +41,20 @@ class Hero04(BasePokerPlayer):
         blinds = min(own_stack, avg_stack) / self.bb
 
         # push/fold
-        if round_state['street'] == 'preflop' and blinds < 14:
+        if round_state['street'] == 'preflop' and blinds < self.ins(14):
             return self.push_fold(valid_actions, round_state, blinds, c1, c2)
 
         # short stack
-        if self.short or round_state['street'] == 'preflop':# and blinds < 26:
+        if self.short or round_state['street'] == 'preflop':# and blinds < self.ins(26):
             return self.play_short_stack(valid_actions, round_state, c1, c2)
 
         # monster
         if round_state['street'] == 'preflop':
             return self.play_monster(valid_actions, c1, c2)
         return self.check_or_fold(valid_actions)
+
+    def ins(self, val):
+        return val * self.insanity
 
     def play_short_stack(self, valid_actions, round_state, c1, c2):
         self.short = True
@@ -436,7 +437,7 @@ class Hero04(BasePokerPlayer):
 
     def is_push(self, pos, blinds, m):
         for key in m:
-            if pos >= key and blinds <= m[key]:
+            if pos >= key and blinds <= round(self.ins(m[key])):
                 return True
         return False
 

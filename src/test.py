@@ -15,7 +15,7 @@ STACK = 1500
 GAMES = 200
 
 players = [
-    ['Hero04   ', Hero04(), 0, 0],
+    ['Hero04   ', Hero04(1.0), 0, 0],
     # ['Hero03   ', Hero03(), 0, 0],
     # ['Randomer1', Randomer(), 0, 0],
     # ['Hero02   ', Hero02(), 0, 0],
@@ -25,6 +25,15 @@ players = [
     # ['Hero02   ', Hero02(), 0, 0],
     # ['Hero01   ', Hero01(), 0, 0],
     # ['Randomer1', Randomer(), 0, 0],
+
+    # ['Hero04.25', Hero04(0.25), 0, 0],
+    # ['Hero04.33', Hero04(0.33), 0, 0],
+    # ['Hero04 .5', Hero04(0.5), 0, 0],
+    # ['Hero04  1', Hero04(1.0), 0, 0],
+    # ['Hero04  2', Hero04(2.0), 0, 0],
+    # ['Hero04  3', Hero04(3.0), 0, 0],
+    # ['Hero04  4', Hero04(4.0), 0, 0],
+    # ['Hero04  5', Hero04(5.0), 0, 0],
 
     ['Randomer1', Randomer(), 0, 0],
     ['Randomer2', Randomer(), 0, 0],

@@ -2,7 +2,7 @@ from hero_04 import *
 
 if __name__ == '__main__':
 
-    player = Hero04()
+    player = Hero04(1.0)
 
     while True:
         line = sys.stdin.readline().rstrip()
