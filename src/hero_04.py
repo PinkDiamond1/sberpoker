@@ -47,7 +47,7 @@ class Hero04(BasePokerPlayer):
             return self.push_fold(valid_actions, round_state, blinds, c1, c2)
 
         # short stack
-        if round_state['street'] == 'preflop' and blinds < 26 or self.short:
+        if self.short or round_state['street'] == 'preflop':# and blinds < 26:
             return self.play_short_stack(valid_actions, round_state, c1, c2)
 
         # monster
@@ -267,6 +267,8 @@ class Hero04(BasePokerPlayer):
         return self.check_or_fold(valid_actions)
 
     def push_fold(self, valid_actions, round_state, blinds, c1, c2):
+        self.short = True
+
         low = min(c1.rank, c2.rank)
         hi = max(c1.rank, c2.rank)
         pair = c1.rank == c2.rank
