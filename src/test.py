@@ -17,6 +17,13 @@ GAMES = 100
 
 players = [
     ['Hero05   ', Hero05(1.0), 0, 0],
+    ['Hero04   ', Hero04(1.0), 0, 0],
+    ['Hero05   ', Hero05(1.0), 0, 0],
+    ['Hero04   ', Hero04(1.0), 0, 0],
+    ['Hero05   ', Hero05(1.0), 0, 0],
+    ['Hero04   ', Hero04(1.0), 0, 0],
+    ['Hero05   ', Hero05(1.0), 0, 0],
+    ['Hero04   ', Hero04(1.0), 0, 0],
     # ['Hero03   ', Hero03(), 0, 0],
     # ['Randomer1', Randomer(), 0, 0],
     # ['Hero02   ', Hero02(), 0, 0],
@@ -36,14 +43,14 @@ players = [
     # ['Hero04  4', Hero04(4.0), 0, 0],
     # ['Hero04  5', Hero04(5.0), 0, 0],
 
-    ['Randomer1', Randomer(), 0, 0],
-    ['Randomer2', Randomer(), 0, 0],
-    ['Randomer3', Randomer(), 0, 0],
-    ['Randomer4', Randomer(), 0, 0],
-    ['Randomer5', Randomer(), 0, 0],
-    ['Randomer6', Randomer(), 0, 0],
-    ['Randomer7', Randomer(), 0, 0],
-    ['Randomer8', Randomer(), 0, 0],
+    # ['Randomer1', Randomer(), 0, 0],
+    # ['Randomer2', Randomer(), 0, 0],
+    # ['Randomer3', Randomer(), 0, 0],
+    # ['Randomer4', Randomer(), 0, 0],
+    # ['Randomer5', Randomer(), 0, 0],
+    # ['Randomer6', Randomer(), 0, 0],
+    # ['Randomer7', Randomer(), 0, 0],
+    # ['Randomer8', Randomer(), 0, 0],
 ]
 
 for g in range(GAMES):
